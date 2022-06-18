@@ -6,16 +6,18 @@ import sys
 def main():
     config = Cfg.load_config_from_file('./config/vgg_transformer.yml')
 
-    config['device'] = f'cuda:{sys.argv[1]}'
+    if len(sys.argv) > 2:
+        config['device'] = f'cuda:{sys.argv[1]}'
+
     config['vocab'] = config['vocab'] + ' ' + '̉'+ '̀' + '̃'+ '́'+ '̣'
     params = {
         'log': './log/train.log',
         'print_every':20,
-        'valid_every':1000,
-        'iters':100000,
-        'batch_size': 512,
+        'valid_every':500,
+        'iters':10000,
+        'batch_size': 128,
         'checkpoint': None,    
-        'export':'./weights/checkpoints.pth',
+        'export':'./weights/vintext.pth',
         'metrics': 1000,
     }
 

@@ -1,0 +1,11 @@
+*.jpg
+*.txt
+
+data/*
+dataLMDB/*
+*.pth
+results/*
+*.log
+*.pyc
+__pycache__/*
+__init__.py

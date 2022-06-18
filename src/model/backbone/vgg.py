@@ -6,12 +6,10 @@ from torchvision.models._utils import IntermediateLayerGetter
 
 
 class Vgg(nn.Module):
-    def __init__(self, name, ss, ks, hidden, pretrained=True, dropout=0.5):
+    def __init__(self, ss, ks, hidden, pretrained=True, dropout=0.5):
         super(Vgg, self).__init__()
 
-        if name == 'vgg19_bn':
-            cnn = models.vgg19_bn(pretrained=pretrained)
-
+        cnn = models.vgg19_bn(pretrained=pretrained)
         pool_idx = 0
         
         for i, layer in enumerate(cnn.features):
@@ -33,13 +31,11 @@ class Vgg(nn.Module):
         conv = self.features(x)
         conv = self.dropout(conv)
         conv = self.last_conv_1x1(conv)
-
-#        conv = rearrange(conv, 'b d h w -> b d (w h)')
         conv = conv.transpose(-1, -2)
         conv = conv.flatten(2)
         conv = conv.permute(-1, 0, 1)
         return conv
 
 def vgg19_bn(ss, ks, hidden, pretrained=True, dropout=0.5):
-    return Vgg('vgg19_bn', ss, ks, hidden, pretrained, dropout)
+    return Vgg(ss, ks, hidden, pretrained, dropout)
    

@@ -4,17 +4,13 @@ from torch import nn
 
 class TransSTR(nn.Module):
     def __init__(self, vocab_size,
-                 backbone,
                  cnn_args, 
-                 transformer_args, seq_modeling='transformer'):
+                 transformer_args):
         
         super(TransSTR, self).__init__()
         
-        self.cnn = CNN(backbone, **cnn_args)
-        self.seq_modeling = seq_modeling
-
-        if seq_modeling == 'transformer':
-            self.transformer = LanguageTransformer(vocab_size, **transformer_args)
+        self.cnn = CNN(**cnn_args)
+        self.transformer = LanguageTransformer(vocab_size, **transformer_args)
 
     def forward(self, img, tgt_input, tgt_key_padding_mask):
         """
@@ -25,8 +21,8 @@ class TransSTR(nn.Module):
             - output: b t v
         """
         src = self.cnn(img)
+        outputs = self.transformer(src, tgt_input, tgt_key_padding_mask=tgt_key_padding_mask)
+        outputs = outputs.view(-1, outputs.size(2))
 
-        if self.seq_modeling == 'transformer':
-            outputs = self.transformer(src, tgt_input, tgt_key_padding_mask=tgt_key_padding_mask)
         return outputs
 

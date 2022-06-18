@@ -75,10 +75,8 @@ def build_model(config):
     device = config['device']
     
     model = TransSTR(len(vocab),
-            config['backbone'],
             config['cnn'], 
-            config['transformer'],
-            config['seq_modeling'])
+            config['transformer'])
     
     model = model.to(device)
 

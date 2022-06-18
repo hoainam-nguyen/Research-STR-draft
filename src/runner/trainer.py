@@ -1,4 +1,5 @@
 from src.optim.optim import ScheduledOptim
+from src.optim.loss import LossFunction
 from src.optim.labelsmoothingloss import LabelSmoothingLoss
 from torch.optim import Adam, SGD, AdamW
 from torch import nn
@@ -58,8 +59,8 @@ class Trainer():
 #            512,
 #            **config['optimizer'])
 
-        self.criterion = LabelSmoothingLoss(len(self.vocab), padding_idx=self.vocab.pad, smoothing=0.1)
-        
+        #self.criterion = LabelSmoothingLoss(len(self.vocab), padding_idx=self.vocab.pad, smoothing=0.1)
+        self.criterion = LossFunction(self.config, len(self.vocab), padding_idx=self.vocab.pad, smoothing=0.1)
         transforms = None
         if self.image_aug:
             transforms =  augmentor
@@ -102,14 +103,15 @@ class Trainer():
     def step_train(self, batch):
         self.model.train()
         batch = batch_to_device(self.device, batch)
+
         img, tgt_input, tgt_output, tgt_padding_mask = batch['img'], batch['tgt_input'], batch['tgt_output'], batch['tgt_padding_mask']    
         outputs = self.model(img, tgt_input, tgt_key_padding_mask=tgt_padding_mask)
 
-        outputs = outputs.view(-1, outputs.size(2)) #flatten(0, 1)
+        #outputs = outputs.view(-1, outputs.size(2)) #flatten(0, 1)
         tgt_output = tgt_output.view(-1) #flatten()
         
         loss = self.criterion(outputs, tgt_output)
-
+        #print('outpus', outputs[0])
         self.optimizer.zero_grad()
 
         loss.backward()
@@ -176,7 +178,7 @@ class Trainer():
                     best_acc = acc_full_seq
         
         print('Done training')
-        self.save_weights(self.export_weights)
+        #self.save_weights(self.export_weights)
             
     def validate(self):
         self.model.eval()
@@ -191,7 +193,7 @@ class Trainer():
 
                 outputs = self.model(img, tgt_input, tgt_padding_mask)
   
-                outputs = outputs.flatten(0,1)
+                #outputs = outputs.flatten(0,1)
                 tgt_output = tgt_output.flatten()
                 loss = self.criterion(outputs, tgt_output)
 

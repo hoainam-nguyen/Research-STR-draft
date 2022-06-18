@@ -2,10 +2,38 @@ import torch
 from torch import nn
 from src.model.vocab import Vocab
 
+
+class LossFunction(nn.Module):
+    def __init__(self,config, classes, padding_idx, smoothing=0.1, dim=-1):
+        super(LossFunction, self).__init__()
+        self.config = config
+        self.confidence = 1.0 - smoothing
+        self.smoothing = smoothing
+        self.cls = classes
+        self.dim = dim
+        self.padding_idx = padding_idx
+
+        self.FC_loss = FocalLoss(self.dim)
+        self.CC_loss = ClusterCharacterLoss(config['vocab'])
+
+    def forward(self, pred, target):
+        with torch.no_grad():
+            true_dist = torch.zeros_like(pred)
+            true_dist.fill_(self.smoothing / (self.cls - 2))
+            true_dist.scatter_(1, target.data.unsqueeze(1), self.confidence)
+            true_dist[:, self.padding_idx] = 0
+            mask = torch.nonzero(target.data == self.padding_idx, as_tuple=False)
+            if mask.dim() > 0:
+                true_dist.index_fill_(0, mask.squeeze(), 0.0)
+
+        pred = pred.log_softmax(dim=self.dim)
+        loss = self.FC_loss(pred, true_dist) + self.CC_loss(pred, true_dist)
+        return loss
+
 class ClusterCharacterLoss(nn.Module):
-    def __init__(self, config):
-        super(ClusterCharacterLoss, self).__init__()
-        self.vocab = Vocab(config['vocab'])
+    def __init__(self, vocab):
+        super().__init__()
+        self.vocab = Vocab(vocab)
         self.cluster_vocab = open('./src/loader/cluster_vocab.txt', 'r', encoding='utf8').readlines()
         self.cluster_list, self.cluster_dict = self.map_cluster()
 
@@ -20,6 +48,8 @@ class ClusterCharacterLoss(nn.Module):
         return cluster_list, cluster_dict
 
     def check(self, pred, tgt):
+        pred = int(pred)
+        tgt = int(tgt)
         if pred not in self.cluster_list:
             pred = -1
         else: pred = self.cluster_dict[pred]
@@ -33,12 +63,14 @@ class ClusterCharacterLoss(nn.Module):
 
     def create_seq(self, pred_ids):
         pred_list = []
-        for d in true_dist:
+        for d in pred_ids:
             pred_list.append(int(torch.argmax(d)))
         pred_tensor = torch.Tensor(pred_list)
         return pred_tensor
 
     def forward(self, pred, target):
+        pred = self.create_seq(pred)
+        target = self.create_seq(target)
         cluster_list, cluster_dict = self.map_cluster()
         length = min(len(pred), len(target))
         sum_penalty = 0
@@ -52,50 +84,15 @@ class ClusterCharacterLoss(nn.Module):
             sum_penalty += penalty
         return sum_penalty/length
 
-class LabelSmoothingLoss(nn.Module):
-    def __init__(self, classes, padding_idx, smoothing=0.1, dim=-1):
-        super(LabelSmoothingLoss, self).__init__()
-        self.confidence = 1.0 - smoothing
-        self.smoothing = smoothing
-        self.cls = classes
+class FocalLoss(nn.Module):
+    def __init__(self,dim, gamma=2., reduction='mean'):
+        super(FocalLoss, self).__init__()
         self.dim = dim
-        self.padding_idx = padding_idx
-
-    def create_seq(self, pred_ids):
-        pred_list = []
-        for d in true_dist:
-            pred_list.append(int(torch.argmax(d)))
-        pred_tensor = torch.Tensor(pred_list)
-        return pred_tensor
-
-    def forward(self, pred, target):
-        #pred = pred.log_softmax(dim=self.dim)
-        #print(pred)
-        #print(self.padding_idx)
-        with torch.no_grad():
-            # true_dist = pred.data.clone()
-            true_dist = torch.zeros_like(pred)
-            true_dist.fill_(self.smoothing / (self.cls - 2))
-            true_dist.scatter_(1, target.data.unsqueeze(1), self.confidence)
-            true_dist[:, self.padding_idx] = 0
-            mask = torch.nonzero(target.data == self.padding_idx, as_tuple=False)
-            if mask.dim() > 0:
-                true_dist.index_fill_(0, mask.squeeze(), 0.0)
-
-        # pred_tensor = self.create_seq(pred)
-        # target_tensor = self.create_seq(true_dist)
-        pred = pred.log_softmax(dim=self.dim)
-        return torch.mean(torch.sum(-true_dist * pred, dim=self.dim))
-
-class FocalLossWithLabelSmoothing(nn.Module):
-    def __init__(self,classes, padding_idx,  gamma=2., reduction='mean'):
-        super().__init__()
         self.gamma = gamma
         self.reduction = reduction
-        self.CE = LabelSmoothingLoss(classes=classes, padding_idx = padding_idx)
 
-    def forward(self, pred, target):
-        CE_loss = self.CE(pred, target)
+    def forward(self, pred, true_dist):
+        CE_loss = torch.mean(torch.sum(-true_dist * pred, dim=self.dim))
         pt = torch.exp(-CE_loss)
         F_loss = ((1 - pt)**self.gamma) * CE_loss
         if self.reduction == 'sum':
