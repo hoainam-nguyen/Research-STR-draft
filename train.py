@@ -11,13 +11,13 @@ def main():
 
     config['vocab'] = config['vocab'] + ' ' + '̉'+ '̀' + '̃'+ '́'+ '̣'
     params = {
-        'log': './log/train.log',
+        'log': './log/train_valid_inVocab.log',
         'print_every':20,
-        'valid_every':500,
-        'iters':10000,
+        'valid_every':1000,
+        'iters':100000,
         'batch_size': 128,
         'checkpoint': None,    
-        'export':'./weights/vintext.pth',
+        'export':'./weights/checkpoint_oov_inVocab.pth',
         'metrics': 1000,
     }
 

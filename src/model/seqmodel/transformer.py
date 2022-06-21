@@ -17,9 +17,12 @@ class LanguageTransformer(nn.Module):
         self.pos_enc = PositionalEncoding(d_model, pos_dropout, max_seq_length)
 #        self.learned_pos_enc = LearnedPositionalEncoding(d_model, pos_dropout, max_seq_length)
 
-        self.transformer = nn.Transformer(d_model, nhead, 
-                                          num_encoder_layers, num_decoder_layers, 
-                                          dim_feedforward, trans_dropout)
+        self.transformer = nn.Transformer(d_model, 
+                                          nhead, 
+                                          num_encoder_layers, 
+                                          num_decoder_layers, 
+                                          dim_feedforward, 
+                                          trans_dropout)
         
         self.fc = nn.Linear(d_model, vocab_size)
         
@@ -41,9 +44,13 @@ class LanguageTransformer(nn.Module):
 
         tgt = self.pos_enc(self.embed_tgt(tgt) * math.sqrt(self.d_model))
         
-        output = self.transformer(src, tgt, tgt_mask=tgt_mask, src_key_padding_mask=src_key_padding_mask,
-                                  tgt_key_padding_mask=tgt_key_padding_mask, memory_key_padding_mask=memory_key_padding_mask)
-#        output = rearrange(output, 't n e -> n t e')
+        output = self.transformer(src = src, 
+                                  tgt = tgt, 
+                                  tgt_mask=tgt_mask, 
+                                  src_key_padding_mask=src_key_padding_mask,   
+                                  tgt_key_padding_mask=tgt_key_padding_mask, 
+                                  memory_key_padding_mask=memory_key_padding_mask)
+
         output = output.transpose(0, 1)
         return self.fc(output)
 

@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
+vocab = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~', '€', '£', '¥', '°', '₹']
+
 def checkImageIsValid(imageBin):
     isvalid = True
     imgH = None
@@ -54,9 +56,17 @@ def createDataset(outputPath, root_dir, annotation_path):
         try:
             imageFile, label = annotations[i]
         except:
-            print(annotations[i])
+            print('Skip by failed path')
             error += 1
             continue
+        
+        # Checkout vocab
+        for c in label:
+            if c not in vocab:
+                print('Skip by failed vocab')
+                error += 1
+                continue
+        
         imagePath = os.path.join(root_dir, imageFile)
 
         if not os.path.exists(imagePath):
@@ -95,4 +105,10 @@ def createDataset(outputPath, root_dir, annotation_path):
         print('Remove {} invalid images'.format(error))
     print('Created dataset with %d samples' % nSamples)
     sys.stdout.flush()
+
+
+if __name__ == "__main__":
+    createDataset(  outputPath = './dataLMDB/valid_OOV_filterVocab_outVocab', 
+                    root_dir = '/mlcv/Databases/OOV/WordCropping', 
+                    annotation_path = 'valid_out.txt')
 

@@ -34,7 +34,7 @@ class ClusterCharacterLoss(nn.Module):
     def __init__(self, vocab):
         super().__init__()
         self.vocab = Vocab(vocab)
-        self.cluster_vocab = open('./src/loader/cluster_vocab.txt', 'r', encoding='utf8').readlines()
+        self.cluster_vocab = open('./src/loader/cluster_vocab_en.txt', 'r', encoding='utf8').readlines()
         self.cluster_list, self.cluster_dict = self.map_cluster()
 
     def map_cluster(self):
