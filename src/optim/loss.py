@@ -2,7 +2,6 @@ import torch
 from torch import nn
 from src.model.vocab import Vocab
 
-
 class LossFunction(nn.Module):
     def __init__(self,config, classes, padding_idx, smoothing=0.1, dim=-1):
         super(LossFunction, self).__init__()
@@ -34,7 +33,7 @@ class ClusterCharacterLoss(nn.Module):
     def __init__(self, vocab):
         super().__init__()
         self.vocab = Vocab(vocab)
-        self.cluster_vocab = open('./src/loader/cluster_vocab_en.txt', 'r', encoding='utf8').readlines()
+        self.cluster_vocab = open('./src/loader/cluster_vocab.txt', 'r', encoding='utf8').readlines()
         self.cluster_list, self.cluster_dict = self.map_cluster()
 
     def map_cluster(self):

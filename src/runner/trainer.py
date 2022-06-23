@@ -1,6 +1,5 @@
 from src.optim.optim import ScheduledOptim
 from src.optim.loss import LossFunction
-from src.optim.labelsmoothingloss import LabelSmoothingLoss
 from torch.optim import Adam, SGD, AdamW
 from torch import nn
 from src.tools.utils import build_model

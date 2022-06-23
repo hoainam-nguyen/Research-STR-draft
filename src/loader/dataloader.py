@@ -16,7 +16,6 @@ from tqdm import tqdm
 from torch.utils.data import Dataset
 from torch.utils.data.sampler import Sampler
 from src.tools.utils import process_image
-from src.tools.create_dataset import createDataset
 from src.tools.utils import resize
 
 class SceneTextDataset(Dataset):
@@ -32,12 +31,6 @@ class SceneTextDataset(Dataset):
 
         self.lmdb_path =  lmdb_path
 
-        # if os.path.isdir(self.lmdb_path):
-        #     print('{} exists. Remove folder if you want to create new dataset'.format(self.lmdb_path))
-        #     sys.stdout.flush()
-        # else:
-        #     createDataset(self.lmdb_path, root_dir, annotation_path)
-        
         self.env = lmdb.open(
             self.lmdb_path,
             max_readers=8,
