@@ -1,5 +1,5 @@
 from src.optim.optim import ScheduledOptim
-from src.optim.labelsmoothingloss import LabelSmoothingLoss
+from src.optim.loss import LossFunction
 from torch.optim import Adam, SGD, AdamW
 from torch import nn
 from src.tools.utils import build_model
@@ -37,6 +37,9 @@ class Trainer():
         self.valid_annotation = config['dataset']['valid_annotation']
         self.dataset_name = config['dataset']['name']
 
+        self.train_lmdb = config['dataset']['train_lmdb']
+        self.valid_lmdb = config['dataset']['valid_lmdb']
+
         self.batch_size = config['trainer']['batch_size']
         self.print_every = config['trainer']['print_every']
         self.valid_every = config['trainer']['valid_every']
@@ -58,19 +61,19 @@ class Trainer():
 #            512,
 #            **config['optimizer'])
 
-        self.criterion = LabelSmoothingLoss(len(self.vocab), padding_idx=self.vocab.pad, smoothing=0.1)
-        
+        #self.criterion = LabelSmoothingLoss(len(self.vocab), padding_idx=self.vocab.pad, smoothing=0.1)
+        self.criterion = LossFunction(self.config, len(self.vocab), padding_idx=self.vocab.pad, smoothing=0.1)
         transforms = None
         if self.image_aug:
             transforms =  augmentor
 
-        self.train_gen = self.data_gen(lmdb_path = './dataLMDB/train_{}'.format(self.dataset_name), 
+        self.train_gen = self.data_gen(lmdb_path = self.train_lmdb, 
                                        data_root =  self.data_root, 
                                        annotation = self.train_annotation, 
                                        masked_language_model = self.masked_language_model, 
                                        transform=transforms)
         if self.valid_annotation:
-            self.valid_gen = self.data_gen(lmdb_path = './dataLMDB/valid_{}'.format(self.dataset_name), 
+            self.valid_gen = self.data_gen(lmdb_path = self.valid_lmdb, 
                                            data_root = self.data_root, 
                                            annotation = self.valid_annotation, 
                                             masked_language_model=False)
@@ -102,14 +105,15 @@ class Trainer():
     def step_train(self, batch):
         self.model.train()
         batch = batch_to_device(self.device, batch)
+
         img, tgt_input, tgt_output, tgt_padding_mask = batch['img'], batch['tgt_input'], batch['tgt_output'], batch['tgt_padding_mask']    
         outputs = self.model(img, tgt_input, tgt_key_padding_mask=tgt_padding_mask)
 
-        outputs = outputs.view(-1, outputs.size(2)) #flatten(0, 1)
+        #outputs = outputs.view(-1, outputs.size(2)) #flatten(0, 1)
         tgt_output = tgt_output.view(-1) #flatten()
         
         loss = self.criterion(outputs, tgt_output)
-
+        #print('outpus', outputs[0])
         self.optimizer.zero_grad()
 
         loss.backward()
@@ -176,7 +180,7 @@ class Trainer():
                     best_acc = acc_full_seq
         
         print('Done training')
-        self.save_weights(self.export_weights)
+        self.save_checkpoint('./weights/final_weght.pth')
             
     def validate(self):
         self.model.eval()
@@ -191,7 +195,7 @@ class Trainer():
 
                 outputs = self.model(img, tgt_input, tgt_padding_mask)
   
-                outputs = outputs.flatten(0,1)
+                #outputs = outputs.flatten(0,1)
                 tgt_output = tgt_output.flatten()
                 loss = self.criterion(outputs, tgt_output)
 
@@ -253,8 +257,8 @@ class Trainer():
         state = {'iter':self.iter, 'state_dict': self.model.state_dict(),
                 'optimizer': self.optimizer.state_dict(), 'train_losses': self.train_losses}
         
-        path, _ = os.path.split(filename)
-        os.makedirs(path, exist_ok=True)
+        # path, _ = os.path.split(filename)
+        # os.makedirs(path, exist_ok=True)
 
         torch.save(state, filename)
 

@@ -1,0 +1,12 @@
+0123456789
+ab
+cd
+e
+f
+g
+h
+ij
+k
+lmnopqrstuvwxyz
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~€£¥°₹

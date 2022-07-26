@@ -1,0 +1,12 @@
+*.jpg
+*.txt
+!src/loader/*.txt
+data/*
+dataLMDB/*
+*.pth
+results/*
+*.log
+*.pyc
+__pycache__/*
+__init__.py
+submission/*

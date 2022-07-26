@@ -3,11 +3,9 @@ from torch import nn
 import src.model.backbone.vgg as vgg
 
 class CNN(nn.Module):
-    def __init__(self, backbone, **kwargs):
+    def __init__(self, **kwargs):
         super(CNN, self).__init__()
-
-        if backbone == 'vgg19_bn':
-            self.model = vgg.vgg19_bn(**kwargs)
+        self.model = vgg.vgg19_bn(**kwargs)
 
     def forward(self, x):
         return self.model(x)

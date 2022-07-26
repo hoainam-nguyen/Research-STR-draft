@@ -1,7 +1,0 @@
-Train
-    Remove 84 invalid images
-    Created dataset with 26166 samples
-
-Valid
-Remove 42 invalid images
-Created dataset with 7296 samples

@@ -1,20 +1,25 @@
 vocab: aAàÀảẢãÃáÁạẠăĂằẰẳẲẵẴắẮặẶâÂầẦẩẨẫẪấẤậẬbBcCdDđĐeEèÈẻẺẽẼéÉẹẸêÊềỀểỂễỄếẾệỆfFgGhHiIìÌỉỈĩĨíÍịỊjJkKlLmMnNoOòÒỏỎõÕóÓọỌôÔồỒổỔỗỖốỐộỘơƠờỜởỞỡỠớỚợỢpPqQrRsStTuUùÙủỦũŨúÚụỤưƯừỪửỬữỮứỨựỰvVwWxXyYỳỲỷỶỹỸýÝỵỴzZ0123456789!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~°
+#vocab: aAàÀảẢãÃáÁạẠăĂằẰẳẲẵẴắẮặẶâÂầẦẩẨẫẪấẤậẬbBcCdDđĐeEèÈẻẺẽẼéÉẹẸêÊềỀểỂễỄếẾệỆfFgGhHiIìÌỉỈĩĨíÍịỊjJkKlLmMnNoOòÒỏỎõÕóÓọỌôÔồỒổỔỗỖốỐộỘơƠờỜởỞỡỠớỚợỢpPqQrRsStTuUùÙủỦũŨúÚụỤưƯừỪửỬữỮứỨựỰvVwWxXyYỳỲỷỶỹỸýÝỵỴzZ0123456789!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~€£¥°₹
+#vocab: 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~€£¥°₹
 
 device: cuda:3
 
-dataset:    
-    name: VinText
-    data_root: ./data/VinText
-    train_annotation: train_labels.txt
-    valid_annotation: val_labels.txt
+dataset: 
+    name: OOV
+    data_root: /mlcv/Databases/OOV/WordCropping
+    train_annotation: gt_train.txt
+    valid_annotation: gt_valid.txt
+
+    train_lmdb: ./dataLMDB/train_VinText 
+    valid_lmdb: ./dataLMDB/valid_VinText
+
     image_height: 32
     image_min_width: 32
-    image_max_width: 512
+    image_max_width: 128 #512
 
-seq_modeling: transformer
 transformer:  
     d_model: 256
-    nhead: 8
+    nhead: 4
     num_encoder_layers: 6
     num_decoder_layers: 6
     dim_feedforward: 2048
@@ -40,12 +45,10 @@ dataloader:
     pin_memory: True
 
 aug:
-    image_aug: true
+    image_aug: false
     masked_language_model: true
 
 quiet: False 
-
-backbone: vgg19_bn
 cnn:
     ss:
         - [2, 2]
